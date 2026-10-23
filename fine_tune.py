@@ -29,7 +29,14 @@ from diffusers import AutoencoderKL, DDPMScheduler, StableDiffusionPipeline, UNe
 from diffusers.optimization import get_scheduler
 from diffusers.utils import check_min_version
 from diffusers.utils.import_utils import is_xformers_available
-from huggingface_hub import HfFolder, Repository, whoami
+
+try:
+    from huggingface_hub import HfFolder, Repository, whoami
+except ImportError:
+    HfFolder = None
+    Repository = None
+    whoami = None
+
 
 
 # TODO: remove and import from diffusers.utils when the new version of diffusers is released
