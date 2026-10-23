@@ -137,3 +137,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# torch whl
+/torchwhl
+*.whl
+
+# embbedings result
+embeddings/spreadf-token/*

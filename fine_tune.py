@@ -15,10 +15,8 @@ import torch.nn.functional as F
 import torch.utils.checkpoint
 from torch.utils.data import Dataset
 
-from semantic_aug.datasets.coco import COCODataset
-from semantic_aug.datasets.spurge import SpurgeDataset
-from semantic_aug.datasets.imagenet import ImageNetDataset
-from semantic_aug.datasets.pascal import PASCALDataset
+# DATASETS import
+from semantic_aug.datasets import DATASETS
 
 import datasets
 import diffusers
@@ -26,12 +24,13 @@ import PIL
 import transformers
 from accelerate import Accelerator
 from accelerate.logging import get_logger
-from accelerate.utils import set_seed
+from accelerate.utils import set_seed, ProjectConfiguration
 from diffusers import AutoencoderKL, DDPMScheduler, StableDiffusionPipeline, UNet2DConditionModel
 from diffusers.optimization import get_scheduler
 from diffusers.utils import check_min_version
 from diffusers.utils.import_utils import is_xformers_available
 from huggingface_hub import HfFolder, Repository, whoami
+
 
 # TODO: remove and import from diffusers.utils when the new version of diffusers is released
 from packaging import version
@@ -39,15 +38,6 @@ from PIL import Image
 from torchvision import transforms
 from tqdm.auto import tqdm
 from transformers import CLIPTextModel, CLIPTokenizer
-
-
-DATASETS = {
-    "spurge": SpurgeDataset, 
-    "coco": COCODataset, 
-    "pascal": PASCALDataset,
-    "imagenet": ImageNetDataset
-}
-
 
 if version.parse(version.parse(PIL.__version__).base_version) >= version.parse("9.1.0"):
     PIL_INTERPOLATION = {
@@ -258,7 +248,7 @@ def parse_args():
     parser.add_argument("--examples-per-class", nargs='+', type=int, default=[1, 2, 4, 8, 16])
     
     parser.add_argument("--dataset", type=str, default="coco", 
-                        choices=["spurge", "imagenet", "coco", "pascal"])
+                        choices=list(DATASETS.keys()), help="Dataset to use for fine-tuning.")
 
     parser.add_argument("--unet-ckpt", type=str, default=None)
 
@@ -423,11 +413,14 @@ def main(args):
 
     logging_dir = os.path.join(args.output_dir, args.logging_dir)
 
+    project_config = ProjectConfiguration(project_dir=args.output_dir, logging_dir=logging_dir)
+    
     accelerator = Accelerator(
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         mixed_precision=args.mixed_precision,
-        log_with=args.report_to,
-        logging_dir=logging_dir,
+        log_with=None,
+        # log_with=args.report_to,
+        project_config=project_config,
     )
 
     # Make one log on every process with the configuration for debugging.
@@ -604,6 +597,7 @@ def main(args):
 
     # We need to initialize the trackers we use, and also store our configuration.
     # The trackers initializes automatically on the main process.
+    
     if accelerator.is_main_process:
         accelerator.init_trackers("textual_inversion", config=vars(args))
 
@@ -709,7 +703,9 @@ def main(args):
 
             logs = {"loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0]}
             progress_bar.set_postfix(**logs)
-            accelerator.log(logs, step=global_step)
+            
+            if getattr(accelerator, "trackers", None): 
+                accelerator.log(logs, step=global_step)
 
             if global_step >= args.max_train_steps:
                 break
@@ -770,7 +766,7 @@ if __name__ == "__main__":
             image.save(path)
 
         for class_name in train_dataset.class_names:
-
+      
             formatted_name = class_name.replace(" ", "_")
             dirname = f"{args.dataset}-{seed}-{examples_per_class}/{formatted_name}"
 
