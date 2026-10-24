@@ -1,7 +1,4 @@
-from semantic_aug.datasets.coco import COCODataset
-from semantic_aug.datasets.spurge import SpurgeDataset
-from semantic_aug.datasets.imagenet import ImageNetDataset
-from semantic_aug.datasets.pascal import PASCALDataset
+from semantic_aug.datasets import DATASETS
 from semantic_aug.augmentations.compose import ComposeParallel
 from semantic_aug.augmentations.compose import ComposeSequential
 from semantic_aug.augmentations.real_guidance import RealGuidance
@@ -17,14 +14,6 @@ import torch
 import argparse
 import numpy as np
 import random
-
-
-DATASETS = {
-    "spurge": SpurgeDataset, 
-    "coco": COCODataset, 
-    "pascal": PASCALDataset,
-    "imagenet": ImageNetDataset
-}
 
 COMPOSE = {
     "parallel": ComposeParallel,
