@@ -144,3 +144,5 @@ dmypy.json
 
 # embbedings result
 embeddings/spreadf-token/*
+
+/seed_images
