@@ -256,6 +256,15 @@ def parse_args():
     
     parser.add_argument("--dataset", type=str, default="coco", 
                         choices=list(DATASETS.keys()), help="Dataset to use for fine-tuning.")
+    parser.add_argument(
+        "--fine-tune-dataset",
+        type=str,
+        default=None,
+        help=(
+            "Root directory of a custom ionogram dataset. It must contain "
+            "train/<class> and validation/<class> directories."
+        ),
+    )
 
     parser.add_argument("--unet-ckpt", type=str, default=None)
 
@@ -263,6 +272,9 @@ def parse_args():
                         help="erase text inversion concepts first")
 
     args = parser.parse_args()
+    if args.fine_tune_dataset is not None and args.dataset != "ionogram":
+        parser.error("--fine-tune-dataset can only be used with --dataset ionogram")
+
     env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
     if env_local_rank != -1 and env_local_rank != args.local_rank:
         args.local_rank = env_local_rank
@@ -755,9 +767,15 @@ if __name__ == "__main__":
 
         os.makedirs(os.path.join(output_dir, "extracted"), exist_ok=True)
 
-        train_dataset = DATASETS[
-            args.dataset](split="train", seed=seed, 
-                          examples_per_class=examples_per_class)
+        dataset_kwargs = {
+            "split": "train",
+            "seed": seed,
+            "examples_per_class": examples_per_class,
+        }
+        if args.fine_tune_dataset is not None:
+            dataset_kwargs["data_dir"] = args.fine_tune_dataset
+
+        train_dataset = DATASETS[args.dataset](**dataset_kwargs)
 
         for idx in range(len(train_dataset)):
 
@@ -777,8 +795,6 @@ if __name__ == "__main__":
             formatted_name = class_name.replace(" ", "_")
             dirname = f"{args.dataset}-{seed}-{examples_per_class}/{formatted_name}"
 
-            args = parse_args()
-            
             args.seed = seed
 
             args.placeholder_token = f"<{formatted_name}>"

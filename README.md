@@ -31,6 +31,18 @@ We benchmark DA-Fusion on few-shot image classification problems, including a Le
 
 Custom datasets can be evaluated by implementing subclasses of `semantic_aug/few_shot_dataset.py`.
 
+For an ionogram dataset stored outside the repository, pass its root directory to
+`fine_tune.py` without changing the source code:
+
+```bash
+python fine_tune.py --dataset ionogram \
+  --fine-tune-dataset /kaggle/input/my-ionograms \
+  --pretrained_model_name_or_path <model>
+```
+
+The directory should contain `train/<class>` folders, with the same layout for
+any other split used by the dataset.
+
 ## Setting Up PASCAL VOC
 
 Data for the PASCAL VOC task is adapted from the [2012 PASCAL VOC Challenge](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar). Once this dataset has been downloaded and extracted, the PASCAL dataset class `semantic_aug/datasets/pascal.py` should be pointed to the downloaded dataset via the `PASCAL_DIR` config variable located [here](https://github.com/brandontrabucco/da-fusion/blob/main/semantic_aug/datasets/pascal.py#L14).
