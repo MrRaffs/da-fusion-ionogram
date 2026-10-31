@@ -22,8 +22,13 @@ class FewShotDataset(Dataset):
     def __init__(self, examples_per_class: int = None, 
                  generative_aug: GenerativeAugmentation = None, 
                  synthetic_probability: float = 0.5,
-                 synthetic_dir: str = None):
-
+                 synthetic_dir: str = None,
+                 seed_images_path: str = None
+                 ):
+        
+        
+        self.seed_images_path = seed_images_path 
+        
         self.examples_per_class = examples_per_class
         self.generative_aug = generative_aug
 

@@ -59,6 +59,8 @@ if __name__ == "__main__":
     parser.add_argument("--class-name", type=str, default=None)
     
     parser.add_argument("--erasure-ckpt-path", type=str, default=None)
+    
+    parser.add_argument("--seed-images-path", type=str, default=None)
 
     args = parser.parse_args()
 
@@ -91,7 +93,9 @@ if __name__ == "__main__":
 
     train_dataset = DATASETS[
         args.dataset](split="train", seed=args.seed, 
-                      examples_per_class=args.examples_per_class)
+                      examples_per_class=args.examples_per_class,
+                      seed_images_path=args.seed_images_path
+                      )
 
     options = product(range(len(train_dataset)), range(args.num_synthetic))
 

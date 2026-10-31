@@ -13,7 +13,7 @@ DEFAULT_DATA_DIR = os.path.join(
 )
 
 class IonogramDataset(FewShotDataset):
-    num_classes: int = 4
+    num_classes: int = 3
     class_names = ["RangeSF", "FreqSF", "MixSF"]
 
     def __init__(self, 
@@ -34,8 +34,16 @@ class IonogramDataset(FewShotDataset):
             generative_aug=generative_aug, 
             **kwargs
         )
-
-        self.data_dir = data_dir
+        
+        if self.seed_images_path is not None:
+            if not os.path.exists(self.seed_images_path):
+                raise ValueError(f"Seed images path {self.seed_images_path} does not exist.")
+            if not os.path.isdir(self.seed_images_path):
+                raise ValueError(f"Seed images path {self.seed_images_path} is not a directory.")
+            self.data_dir = self.seed_images_path
+        else:
+            self.data_dir = data_dir
+                
         self.split = split
         self.seed = seed
         self.image_size = image_size
